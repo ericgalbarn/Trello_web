@@ -3,6 +3,10 @@ import { cyan, deepOrange, orange, teal } from "@mui/material/colors";
 import { AirplayOutlined } from "@mui/icons-material";
 // Create a theme instance.
 const theme = extendTheme({
+  trelloCustoms: {
+    navBarHeight: "48px",
+    boardBarHeight: "58px",
+  },
   colorSchemes: {
     light: {
       palette: {
