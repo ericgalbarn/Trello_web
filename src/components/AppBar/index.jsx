@@ -15,11 +15,11 @@ import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import Badge from "@mui/material/Badge";
 import Tooltip from "@mui/material/Tooltip";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import LibraryAddIcon from "@mui/icons-material/LibraryAdd";
 
 function AppBar() {
   return (
     <Box
-      px={2}
       sx={{
         width: "100%",
         height: (theme) => theme.trelloCustoms.navBarHeight,
@@ -27,6 +27,7 @@ function AppBar() {
         alignItems: "center",
         justifyContent: "space-between",
         backgroundColor: "background.default",
+        paddingX: "16px",
         gap: "16px",
         overflowX: "auto",
       }}
@@ -62,7 +63,9 @@ function AppBar() {
           <Recent></Recent>
           <Starred></Starred>
           <Templates></Templates>
-          <Button variant="outlined">Create</Button>
+          <Button variant="outlined" startIcon={<LibraryAddIcon />}>
+            Create
+          </Button>
         </Box>
       </Box>
 
