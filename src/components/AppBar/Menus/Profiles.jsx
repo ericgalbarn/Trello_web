@@ -32,7 +32,7 @@ function Profiles() {
           aria-expanded={open ? "true" : undefined}
         >
           <Avatar
-            sx={{ width: 34, height: 34 }}
+            sx={{ width: 36, height: 36 }}
             alt="Alain Delon"
             src="https://royalbooks.cdn.bibliopolis.com/pictures/135548d.jpg?auto=webp&v=1418082390"
           />
