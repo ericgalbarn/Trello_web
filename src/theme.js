@@ -1,11 +1,17 @@
 import { experimental_extendTheme as extendTheme } from "@mui/material/styles";
 // import { cyan, deepOrange, orange, teal } from "@mui/material/colors";
 import { AirplayOutlined } from "@mui/icons-material";
+
+const APP_BAR_HEIGHT = "58px";
+const BOARD_BAR_HEIGHT = "60px";
+const BOARD_CONTENT_HEIGHT = `calc(100vh - ${APP_BAR_HEIGHT} - ${BOARD_BAR_HEIGHT})`;
+
 // Create a theme instance.
 const theme = extendTheme({
   trelloCustoms: {
-    navBarHeight: "58px",
-    boardBarHeight: "60px",
+    navBarHeight: APP_BAR_HEIGHT,
+    boardBarHeight: BOARD_BAR_HEIGHT,
+    boardContentHeight: BOARD_CONTENT_HEIGHT,
   },
   palette: {
     mode: "light", // You can set the default mode if needed
@@ -54,6 +60,15 @@ const theme = extendTheme({
       styleOverrides: {
         // Name of the slot
         root: { fontSize: "0.875rem" },
+      },
+    },
+
+    MuiTypography: {
+      styleOverrides: {
+        // Name of the slot
+        root: {
+          "&.MuiTypography-body1": { fontSize: "0.875rem" },
+        },
       },
     },
     MuiOutlinedInput: {

@@ -39,6 +39,9 @@ function BoardBar() {
         borderBottom: "1px solid #00bfa5",
         backgroundColor: (theme) =>
           theme.palette.mode === "dark" ? "#34495e" : "#1976d2",
+        "&::-webkit-scrollbar-track": {
+          margin: "16px",
+        },
       }}
     >
       <Box
@@ -108,6 +111,9 @@ function BoardBar() {
               height: "34px",
               fontSize: "16px",
               border: "none",
+              color: "white",
+              cursor: "pointer",
+              "&:first-of-type": { backgroundColor: "#a4b0be" },
             },
           }}
         >
