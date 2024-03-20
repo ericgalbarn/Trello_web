@@ -1,10 +1,12 @@
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
-import ModeSelect from "~/components/ModeSelect";
-import AppBar from "~/components/AppBar";
+import ModeSelect from "~/components/ModeSelect/ModeSelect";
+import AppBar from "~/components/AppBar/AppBar";
 import theme from "~/theme";
-import BoardBar from "~/pages/Boards/BoardBar";
-import BoardContent from "~/pages/Boards/BoardContent";
+import BoardBar from "./BoardBar/BoardBar";
+import BoardContent from "./BoardContent/BoardContent";
+import { mockData } from "~/apis/mock-data";
+
 function Board() {
   return (
     <Container
@@ -13,8 +15,8 @@ function Board() {
       sx={{ height: "100vh", backgroundColor: "primary.main" }}
     >
       <AppBar />
-      <BoardBar />
-      <BoardContent />
+      <BoardBar board={mockData?.board} />
+      <BoardContent board={mockData?.board} />
     </Container>
   );
 }
