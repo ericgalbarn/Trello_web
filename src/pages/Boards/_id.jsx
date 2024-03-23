@@ -7,6 +7,7 @@ import BoardBar from "./BoardBar/BoardBar";
 import BoardContent from "./BoardContent/BoardContent";
 import { mockData } from "~/apis/mock-data";
 
+
 function Board() {
   return (
     <Container
