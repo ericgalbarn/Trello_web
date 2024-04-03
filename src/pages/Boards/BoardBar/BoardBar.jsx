@@ -26,9 +26,7 @@ const MENU_STYLE = {
   },
 };
 
-function BoardBar() {
 function BoardBar({ board }) {
-  
   return (
     <Box
       sx={{
