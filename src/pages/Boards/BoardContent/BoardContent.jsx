@@ -25,7 +25,7 @@ const ACTIVE_DRAG_ITEM_TYPE = {
 
 function BoardContent({ board }) {
   // https://docs.dndkit.com/api-documentation/sensors
-  //  Require at least a 10px move out from the default position to activate drga and drop functionality
+  //  Require at least a 10px move out from the default position to activate drag and drop functionality
 
   // const pointerSensor = useSensor(PointerSensor, {activationConstraint: { distance: 10 }});
 
@@ -51,6 +51,8 @@ function BoardContent({ board }) {
   const [activeDragItemId, setActiveDragItemId] = useState(null);
   const [activeDragItemType, setActiveDragItemType] = useState(null);
   const [activeDragItemData, setActiveDragItemData] = useState(null);
+  const [oldColumnWhenDraggingCard, setOldColumnWhenDraggingCard] =
+    useState(null);
 
   useEffect(() => {
     setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, "_id"));
@@ -74,6 +76,11 @@ function BoardContent({ board }) {
         : ACTIVE_DRAG_ITEM_TYPE.COLUMN
     );
     setActiveDragItemData(event?.active?.data?.current);
+
+    // Only when the card is dragged, will we have the oldColumn value setup action
+    if (event?.active?.data?.current?.columnId) {
+      setOldColumnWhenDraggingCard(findColumnByCardId(event?.active?.id));
+    }
   };
   // Trigger within the dragging process of an element
   const handleDragOver = (event) => {
@@ -164,39 +171,103 @@ function BoardContent({ board }) {
   // Trigger when you finish dragging an element => dropping
   const handleDragEnd = (event) => {
     // console.log("handleDragEnd: ", event);
-
-    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) {
-      // console.log("Card drag and drop - Not doing anything");
-      return;
-    }
     const { active, over } = event;
 
-    // Check if 'over' doesn't exist (drag elsewhere then get return right away in case of any possible bugs)
-    if (!over) return;
+    if (!active || !over) return;
 
-    // The assigned arrangement is different from the initial position
-    if (active.id !== over.id) {
-      //Take the prior position (from active)
-      const oldIndex = orderedColumns.findIndex((c) => c._id === active.id);
-      //Take the new position (from over)
-      const newIndex = orderedColumns.findIndex((c) => c._id === over.id);
+    //  Cards drag and drop process
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) {
+      console.log("Card drag and drop - Not doing anything");
 
-      // ArrayMove of dnd-kit is used to arrange the initial Columns array
-      const dndOrderedColumns = arrayMove(orderedColumns, oldIndex, newIndex);
-      // const dndOrderedColumnsIds = dndOrderedColumns.map((c) => c._id);
+      // activeDraggingCard: Cards being dragged
+      const {
+        id: activeDraggingCardId,
+        data: { current: activeDraggingCardData },
+      } = active;
+      // overCard: Cards being interacted above or below in relation to the card dragged above
+      const { id: overCardId } = over;
 
-      // 2 console.logs below will be used for future API call
+      // Find 2 columns based on cardId
+      const activeColumn = findColumnByCardId(activeDraggingCardId);
+      const overColumn = findColumnByCardId(overCardId);
 
-      // console.log("dndOrderedColumns", dndOrderedColumns);
-      // console.log("dndOrderedColumnsIds", dndOrderedColumnsIds);
+      // Do nothing if either of 2 columns doesn't exist in case of page crashing
+      if (!activeColumn || !overColumn) return;
 
-      // Reupdate the original state columns after drag and drop
-      setOrderedColumns(dndOrderedColumns);
+      if (oldColumnWhenDraggingCard._id !== overColumn._id) {
+        //
+      } else {
+        // console.log("Drag and drop card activity in the same column");
+
+        //Take the prior position (from oldColumnWhenDraggingCard)
+        const oldCardIndex = oldColumnWhenDraggingCard?.cards?.findIndex(
+          (c) => c._id === activeDragItemId
+        );
+        //Take the new position (from over)
+        const newCardIndex = overColumn?.cards?.findIndex(
+          (c) => c._id === overCardId
+        );
+        // Use arrayMove as dragging card inside a column is equivalent to the logic of dragging column inside a board content
+        const dndOrderedCards = arrayMove(
+          oldColumnWhenDraggingCard?.cards,
+          oldCardIndex,
+          newCardIndex
+        );
+
+        setOrderedColumns((prevColumns) => {
+          const nextColumns = cloneDeep(prevColumns);
+
+          //Search for the Column we are dropping
+          const targetColumn = nextColumns.find(
+            (column) => column._id === overColumn._id
+          );
+          // Reupdate 2 new value that are card and cardOrderIds in targetColumn
+          targetColumn.cards = dndOrderedCards;
+          targetColumn.cardOrderIds = dndOrderedCards.map((card) => card._id);
+
+          // Return a new state value (precise position)
+          return nextColumns;
+        });
+      }
     }
 
+    // Column drag and drop process
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
+      console.log("Column drag and drop - Not doing anything");
+
+      // The assigned arrangement is different from the initial position
+      if (active.id !== over.id) {
+        //Take the prior position (from active)
+        const oldColumnIndex = orderedColumns.findIndex(
+          (c) => c._id === active.id
+        );
+        //Take the new position (from over)
+        const newColumnIndex = orderedColumns.findIndex(
+          (c) => c._id === over.id
+        );
+
+        // ArrayMove of dnd-kit is used to arrange the initial Columns array
+        const dndOrderedColumns = arrayMove(
+          orderedColumns,
+          oldColumnIndex,
+          newColumnIndex
+        );
+        // const dndOrderedColumnsIds = dndOrderedColumns.map((c) => c._id);
+
+        // 2 console.logs below will be used for future API call
+
+        // console.log("dndOrderedColumns", dndOrderedColumns);
+        // console.log("dndOrderedColumnsIds", dndOrderedColumnsIds);
+
+        // Reupdate the original state columns after drag and drop
+        setOrderedColumns(dndOrderedColumns);
+      }
+    }
+    //  All the data after drag and drop process has to return to the default null value as initially
     setActiveDragItemId(null);
     setActiveDragItemType(null);
     setActiveDragItemData(null);
+    setOldColumnWhenDraggingCard(null);
   };
   // Animation when dropping elements
   const customDropAnimation = {
