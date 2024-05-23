@@ -66,6 +66,74 @@ function BoardContent({ board }) {
     );
   };
 
+  //  General function that reupdate the state in case moving a Card between different Column
+  const moveCardBetweenDifferentColumns = (
+    overColumn,
+    overCardId,
+    active,
+    over,
+    activeColumn,
+    activeDraggingCardId,
+    activeDraggingCardData
+  ) => {
+    setOrderedColumns((prevColumns) => {
+      //  Find the index of the overCard in the column in which the activeCard is supposed to be dropped
+      const overCardIndex = overColumn?.cards?.findIndex(
+        (card) => card._id === overCardId
+      );
+      // This is a computation logic for the newCardIndex (above or below overCard) from the code library
+      let newCardIndex;
+      const isBelowOverItem =
+        active.rect.current.translated &&
+        active.rect.current.translated.top > over.rect.top + over.rect.height;
+      const modifier = isBelowOverItem ? 1 : 0;
+
+      newCardIndex =
+        overCardIndex >= 0
+          ? overCardIndex + modifier
+          : overColumn?.cards?.length + 1;
+      // Clone the old OrderedColumnsStare array to a new one to process the data then return - reupdate a new OrderColumnsState
+      const nextColumns = cloneDeep(prevColumns);
+      const nextActiveColumn = nextColumns.find(
+        (column) => column._id === activeColumn._id
+      );
+      const nextOverColumn = nextColumns.find(
+        (column) => column._id === overColumn._id
+      );
+      // Old column
+      if (nextActiveColumn) {
+        // Remove card from the active column (in other words, initial column, the column started moving)
+        nextActiveColumn.cards = nextActiveColumn.cards.filter(
+          (card) => card._id !== activeDraggingCardId
+        );
+        // Reupdate cardOrderIds array for the expected data
+        nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(
+          (card) => card._id
+        );
+      }
+      // New column
+      if (nextOverColumn) {
+        // Check if the dragging card exists at overColumn,
+        nextOverColumn.cards = nextOverColumn.cards.filter(
+          (card) => card._id !== activeDraggingCardId
+        );
+
+        // Next, add the dragging card into the overColumn according to the new index position
+        nextOverColumn.cards = nextOverColumn.cards.toSpliced(
+          newCardIndex,
+          0,
+          activeDraggingCardData
+        );
+
+        // Reupdate cardOrderIds array for the expected data
+        nextOverColumn.cardOrderIds = nextOverColumn.cards.map(
+          (card) => card._id
+        );
+      }
+      console.log("nextColumns", nextColumns);
+      return nextColumns;
+    });
+  };
   // Trigger when you start dragging an element
   const handleDragStart = (event) => {
     console.log("handleDragStart: ", event);
@@ -109,63 +177,15 @@ function BoardContent({ board }) {
     if (!activeColumn || !overColumn) return;
     // Confirm that the id of the activeColumn and overColumn doesn't match each other while dragging the elements from this column to other column
     if (activeColumn._id !== overColumn._id) {
-      setOrderedColumns((prevColumns) => {
-        //  Find the index of the overCard in the column in which the activeCard is supposed to be dropped
-        const overCardIndex = overColumn?.cards?.findIndex(
-          (card) => card._id === overCardId
-        );
-        // This is a computation logic for the newCardIndex (above or below overCard) from the code library
-        let newCardIndex;
-        const isBelowOverItem =
-          active.rect.current.translated &&
-          active.rect.current.translated.top > over.rect.top + over.rect.height;
-        const modifier = isBelowOverItem ? 1 : 0;
-
-        newCardIndex =
-          overCardIndex >= 0
-            ? overCardIndex + modifier
-            : overColumn?.cards?.length + 1;
-        // Clone the old OrderedColumnsStare array to a new one to process the data then return - reupdate a new OrderColumnsState
-        const nextColumns = cloneDeep(prevColumns);
-        const nextActiveColumn = nextColumns.find(
-          (column) => column._id === activeColumn._id
-        );
-        const nextOverColumn = nextColumns.find(
-          (column) => column._id === overColumn._id
-        );
-        // Old column
-        if (nextActiveColumn) {
-          // Remove card from the active column (in other words, initial column, the column started moving)
-          nextActiveColumn.cards = nextActiveColumn.cards.filter(
-            (card) => card._id !== activeDraggingCardId
-          );
-          // Reupdate cardOrderIds array for the expected data
-          nextActiveColumn.cardOrderIds = nextActiveColumn.cards.map(
-            (card) => card._id
-          );
-        }
-        // New column
-        if (nextOverColumn) {
-          // Check if the dragging card exists at overColumn,
-          nextOverColumn.cards = nextOverColumn.cards.filter(
-            (card) => card._id !== activeDraggingCardId
-          );
-
-          // Next, add the dragging card into the overColumn according to the new index position
-          nextOverColumn.cards = nextOverColumn.cards.toSpliced(
-            newCardIndex,
-            0,
-            activeDraggingCardData
-          );
-
-          // Reupdate cardOrderIds array for the expected data
-          nextOverColumn.cardOrderIds = nextOverColumn.cards.map(
-            (card) => card._id
-          );
-        }
-        console.log("nextColumns", nextColumns);
-        return nextColumns;
-      });
+      moveCardBetweenDifferentColumns(
+        overColumn,
+        overCardId,
+        active,
+        over,
+        activeColumn,
+        activeDraggingCardId,
+        activeDraggingCardData
+      );
     }
   };
   // Trigger when you finish dragging an element => dropping
@@ -195,7 +215,15 @@ function BoardContent({ board }) {
       if (!activeColumn || !overColumn) return;
 
       if (oldColumnWhenDraggingCard._id !== overColumn._id) {
-        //
+        moveCardBetweenDifferentColumns(
+          overColumn,
+          overCardId,
+          active,
+          over,
+          activeColumn,
+          activeDraggingCardId,
+          activeDraggingCardData
+        );
       } else {
         // console.log("Drag and drop card activity in the same column");
 
