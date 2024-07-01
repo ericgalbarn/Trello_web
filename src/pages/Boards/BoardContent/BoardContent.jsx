@@ -11,9 +11,13 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects,
   closestCorners,
+  closestCenter,
+  rectIntersection,
+  pointerWithin,
+  getFirstCollision,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cloneDeep } from "lodash";
 import Column from "./ListColumns/Column/Column";
 import Card from "./ListColumns/Column/ListCards/Card/Card";
@@ -53,6 +57,9 @@ function BoardContent({ board }) {
   const [activeDragItemData, setActiveDragItemData] = useState(null);
   const [oldColumnWhenDraggingCard, setOldColumnWhenDraggingCard] =
     useState(null);
+
+  //  Last collision point before (tackling the collision detection algo)
+  const lastOverId = useRef(null);
 
   useEffect(() => {
     setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, "_id"));
@@ -304,11 +311,59 @@ function BoardContent({ board }) {
     }),
   };
 
+  // We will recustom the strategy/ optimized collision detection algo for dragging and dropping card among multiple columns
+  // args = arguments
+  const collisionDetectionStrategy = useCallback(
+    (args) => {
+      // It's best to use the closestCorners algo for dragging the column
+      if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
+        return closestCorners({ ...args });
+      }
+      // Find the intersection point collision - intersect to the pointer
+      const pointerIntersections = pointerWithin(args);
+      // Collision detection algo will return the collision array here
+      const intersections = !!pointerIntersections?.length
+        ? pointerIntersections
+        : rectIntersection(args);
+
+      let overId = getFirstCollision(intersections, "id");
+      if (overId) {
+        // This part is for the flickering
+        //  If the over is the column then we'll find the to closest cardId inside that collision area based on either the closestCenter or closestCorners collision detection algo are fine. However, the usage of closestCenter seems more viable.
+        const checkColumn = orderedColumns.find(
+          (column) => column._id === overId
+        );
+        if (checkColumn) {
+          // console.log("overId before: ", overId);
+          overId = closestCenter({
+            ...args,
+            droppableContainers: args.droppableContainers.filter(
+              (container) => {
+                return (
+                  container.id !== overId &&
+                  checkColumn?.cardOrderIds?.includes(container.id)
+                );
+              }
+            ),
+          })[0]?.id;
+          // console.log("overId after:", overId);
+        }
+
+        lastOverId.current = overId;
+        return [{ id: overId }];
+      }
+      // If overId is null, it will return an empty array - in case page crash
+      return lastOverId.current ? [{ id: lastOverId.current }] : [];
+    },
+    [activeDragItemType, orderedColumns]
+  );
   return (
     <DndContext
       sensors={sensors}
       // Collision algorithm, use closestCorners instead of closestCenter
-      collisionDetection={closestCorners}
+      // If only use closestCorners, there will be bug flickering + wrong data
+      // collisionDetection={closestCorners}
+      collisionDetection={collisionDetectionStrategy}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
