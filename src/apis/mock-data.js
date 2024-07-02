@@ -6,7 +6,12 @@ export const mockData = {
     type: "public", // 'private'
     ownerIds: [], // Những users là Admin của board
     memberIds: [], // Những users là member bình thường của board
-    columnOrderIds: ["column-id-01", "column-id-02", "column-id-03"], // Thứ tự sắp xếp / vị trí của các Columns trong 1 boards
+    columnOrderIds: [
+      "column-id-01",
+      "column-id-02",
+      "column-id-03",
+      "column-id-04",
+    ], // Thứ tự sắp xếp / vị trí của các Columns trong 1 boards
     columns: [
       {
         _id: "column-id-01",
@@ -185,6 +190,25 @@ export const mockData = {
             memberIds: [],
             comments: [],
             attachments: [],
+          },
+        ],
+      },
+      {
+        _id: "column-id-04",
+        boardId: "board-id-01",
+        title: "Empty Column 04",
+        // The frontend side will generate a special card: Placeholder Card, non-related to backend
+        // This special card will be hidden in the user interface
+        // The Id structure of this card setting to Unique is a piece of cake, no need for a complex random:
+        // 'columnId-placeholder-card' (there is only a maximum of one Placeholder Card for each column)
+        // Important thing to keep in mind when you create: it has to be complete (_id, boardId, columnId, FE_PlaceholderCard)
+        cardOrderIds: ["column-id-04-placeholder-card"],
+        cards: [
+          {
+            _id: "column-id-04-placeholder-card",
+            boardId: "board-id-01",
+            columnId: "column-id-04",
+            FE_PlaceholderCard: true,
           },
         ],
       },
