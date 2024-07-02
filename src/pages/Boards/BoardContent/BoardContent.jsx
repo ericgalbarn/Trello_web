@@ -11,8 +11,8 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects,
   closestCorners,
-  closestCenter,
-  rectIntersection,
+  // closestCenter,
+  // rectIntersection,
   pointerWithin,
   getFirstCollision,
 } from "@dnd-kit/core";
@@ -321,21 +321,26 @@ function BoardContent({ board }) {
       }
       // Find the intersection point collision - intersect to the pointer
       const pointerIntersections = pointerWithin(args);
-      // Collision detection algo will return the collision array here
-      const intersections = !!pointerIntersections?.length
-        ? pointerIntersections
-        : rectIntersection(args);
 
-      let overId = getFirstCollision(intersections, "id");
+      //  If pointerIntersection is an empty array, return will do nothing
+      if (!pointerIntersections?.length) return;
+
+      // Collision detection algo will return the collision array here
+      // const intersections = !!pointerIntersections?.length
+      //   ? pointerIntersections
+      //   : rectIntersection(args);
+
+      // The first overId in the above pointerIntersections
+      let overId = getFirstCollision(pointerIntersections, "id");
       if (overId) {
         // This part is for the flickering
-        //  If the over is the column then we'll find the to closest cardId inside that collision area based on either the closestCenter or closestCorners collision detection algo are fine. However, the usage of closestCenter seems more viable.
+        //  If the over is the column then we'll find the to closest cardId inside that collision area based on either the closestCenter or closestCorners collision detection algo are fine. However, the usage of closestCorners seems more viable.
         const checkColumn = orderedColumns.find(
           (column) => column._id === overId
         );
         if (checkColumn) {
           // console.log("overId before: ", overId);
-          overId = closestCenter({
+          overId = closestCorners({
             ...args,
             droppableContainers: args.droppableContainers.filter(
               (container) => {
